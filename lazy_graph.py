@@ -81,8 +81,8 @@ def generate_contribution(chain: List[Paper]) -> str:
 
 
 def get_auto_criticism_score(contribution: str) -> int:
-  prompt = auto_criticism_prompt(contribution)
-  reply = call_gpt_4o(prompt)
+  messages = auto_criticism_prompt(contribution)
+  reply = call_gpt_4o(messages)
   score = extract_auto_criticism_score(reply)
   return score
 
