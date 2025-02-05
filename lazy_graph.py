@@ -18,14 +18,14 @@ load_dotenv()
 logger = get_logger()
 
 
-def batch_compute_relevance_score(abstracts: List[str]) -> List[int]:
+def batch_compute_relevance_score(original_paper, papers: List[str]) -> List[int]:
   """Compute relevance scores for a batch of abstracts."""
-  prompt = batch_relevance_score_prompt(abstracts)
-  reply = call_gpt_4o(prompt)
+  messages = batch_relevance_score_prompt(original_paper, papers)
+  reply = call_gpt_4o(messages)
   relevance_scores = re_batch_relevance_extraction.findall(reply)
 
-  assert len(relevance_scores) == len(abstracts) - 1, (
-    f"Expected {len(abstracts) - 1} relevance scores, got {len(relevance_scores)}:\nReply: {reply}"
+  assert len(relevance_scores) == len(papers), (
+    f"Expected {len(papers)} relevance scores, got {len(relevance_scores)}:\nReply: {reply}"
   )
   return relevance_scores
 
@@ -34,9 +34,7 @@ def get_random_walk_successor(starting_node: Paper, all_nodes: List[Paper]) -> P
   """Get a successor node by sampling from all nodes and selecting among the most relevant papers."""
   sampled_nodes = sample(all_nodes, k=n_adjacents)
 
-  relevance_scores = batch_compute_relevance_score(
-    [starting_node.abstract] + [adj.abstract for adj in sampled_nodes]
-  )
+  relevance_scores = batch_compute_relevance_score(starting_node, sampled_nodes)
   logger.info(f"Relevance scores: {relevance_scores}")
 
   nodes_by_relevance = [
@@ -70,9 +68,8 @@ def generate_contribution_chain(nodes: List[Paper], length: int) -> List[Paper]:
 
 def generate_contribution(chain: List[Paper]) -> str:
   """Generate a contribution from a chain of papers."""
-  abstracts = [paper.abstract for paper in chain]
-  prompt = contribution_prompt("\n\n".join(abstracts))
-  contribution = call_gpt_4o(prompt)
+  messages = contribution_prompt(chain)
+  contribution = call_gpt_4o(messages)
 
   with open("logs/contribution.log", "a", encoding="utf-8") as f:
     # add also a timestamp

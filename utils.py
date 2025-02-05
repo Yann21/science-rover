@@ -15,19 +15,20 @@ class Paper:
   category: str
 
 
+@dataclass
+class Message:
+  role: str
+  content: str
+
+
 def pprint_chain(chain: List[Paper]):
   for i, paper in enumerate(chain):
     print(f"Paper {i}: {paper.title}\n{paper.abstract}\n")
 
 
-def call_gpt_4o(prompt):
+def call_gpt_4o(messages: list[Message]) -> str:
   chat_completion = client.chat.completions.create(
-    messages=[
-      {
-        "role": "user",
-        "content": prompt,
-      }
-    ],
+    messages=[message.__dict__ for message in messages],
     model="gpt-4o-mini",
   )
 

@@ -1,30 +1,46 @@
 # %%
 import re
+from utils import Paper, Message
 
 
-def batch_relevance_score_prompt(abstracts: list[str]) -> str:
+def batch_relevance_score_prompt(original_paper: Paper, comparant_papers: list[Paper]) -> list[Message]:
   # create a variable abstracts which contains all the abstracts except the first one
-  # and that is introduced by abstract #1: ... abstract #2: ... etc.
-  comparant_abstracts = [
-    f"abstract #{i + 1}:\n{abstract}" for i, abstract in enumerate(abstracts[1:])
+  # and that is introduced by paper #1: ... paper #2: ... etc.
+  messages = [
+    Message(
+      "system",
+      ("Given the following abstracts, please score their relevance to the original paper."
+       "The score should be an integer from 1 to 9. So an example reply could be '4,8,9,1,2,5,4,6,6,9'."
+       f"Original paper: **{original_paper.title}**\n{original_paper.abstract}")
+    ),
+    Message(
+      "user",
+      "\n\n".join([
+        f"Paper #{i + 1}:\n**{paper.title}**\n{paper.abstract}"
+        for i, paper in enumerate(comparant_papers[1:])
+      ])
+    )
   ]
-  comparant_abstracts = "\n\n".join(comparant_abstracts)
 
-  return f"""Given the following abstracts, please score their relevance to the starting paper.
-The score should be an integer from 1 to 9. So an example reply could be "9,8,7,6,5,4,3,2,1".
+  return messages
 
 
-Original paper: {abstracts[0]}
+def contribution_prompt(chain: list[Paper]) -> list[Message]:
+  messages = [
+    Message(
+      "system",
+      "Given the following papers that are known to be related, please provide an interdisciplinary contribution to the field that could combine their ideas."
+    ),
+    Message(
+      "user",
+      "\n\n".join([
+        f"**{paper.title}**\n{paper.abstract}"
+        for paper in chain
+      ])
+    )
+  ]
 
-{comparant_abstracts}
-"""
-
-
-def contribution_prompt(abstracts: str) -> str:
-  return f"""Given the following abstracts that are known to be related, please provide 
-an interdisciplinary contribution to the field that could combine their ideas.
-
-{abstracts}"""
+  return messages
 
 
 re_batch_relevance_extraction = re.compile(r"(\d+),?")
