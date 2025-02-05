@@ -13,6 +13,7 @@ import json
 from utils import Paper, call_gpt_4o, pprint_chain, get_logger
 from datetime import datetime
 from retriever import categories
+from prompts import extract_auto_criticism_score, auto_criticism_prompt
 
 load_dotenv()
 logger = get_logger()
@@ -75,17 +76,24 @@ def generate_contribution(chain: List[Paper]) -> str:
   contribution = call_gpt_4o(prompt)
 
   with open("logs/contribution.log", "a", encoding="utf-8") as f:
-    # add also a timestamp
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    f.write(f"\n\n=== {ts} ===\n\n" + contribution)
+    score = get_auto_criticism_score(contribution)
+    f.write(f"\n\n=== {ts} ===" + f"\n{score}\n\n\n" + contribution)
 
   return contribution
+
+
+def get_auto_criticism_score(contribution: str) -> int:
+  prompt = auto_criticism_prompt(contribution)
+  reply = call_gpt_4o(prompt)
+  score = extract_auto_criticism_score(reply)
+  return score
 
 
 # %%
 n_adjacents = 20
 top_n = 1
-chain_length = 5
+chain_length = 2
 
 with open("arxiv_papers.json", "r", encoding="utf-8") as f:
   arxiv_papers = json.load(f)
@@ -93,10 +101,8 @@ with open("arxiv_papers.json", "r", encoding="utf-8") as f:
 
 
 # %%
-chain = generate_contribution_chain(arxiv_papers, length=chain_length)
-pprint_chain(chain)
-
-
-# %%
-contrib = generate_contribution(chain)
-print(contrib)
+for _ in range(5):
+  chain = generate_contribution_chain(arxiv_papers, length=chain_length)
+  # pprint_chain(chain)
+  contrib = generate_contribution(chain)
+  # print(contrib)
