@@ -54,8 +54,7 @@ def generate_contribution_chain(nodes: List[Paper], length: int) -> List[Paper]:
   """Generate chain of papers by following a pseudo-random walk."""
   n0: List[Paper] = sample(nodes, k=1)
   chain = n0
-  for i in range(length):
-    print(f"Node {i}")
+  for _ in range(length - 1):
     n = get_random_walk_successor(chain[-1], nodes)
     chain.append(n)
   return chain
@@ -78,7 +77,8 @@ def generate_contribution(chain: List[Paper]) -> str:
 
 # %%
 n_adjacents = 20
-top_n = 5
+top_n = 1
+chain_length = 5
 
 with open("arxiv_papers.json", "r", encoding="utf-8") as f:
   arxiv_papers = json.load(f)
@@ -86,8 +86,10 @@ with open("arxiv_papers.json", "r", encoding="utf-8") as f:
 
 
 # %%
-chain = generate_contribution_chain(arxiv_papers, length=5)
+chain = generate_contribution_chain(arxiv_papers, length=chain_length)
 # pprint_chain(chain)
+
+
 # %%
 contrib = generate_contribution(chain)
 print(contrib)
