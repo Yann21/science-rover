@@ -43,4 +43,14 @@ def contribution_prompt(chain: list[Paper]) -> list[Message]:
   return messages
 
 
-re_batch_relevance_extraction = re.compile(r"(\d+),?")
+def auto_criticism_prompt(contribution: str) -> str:
+  return f"""Analyze this idea: Evaluate its feasibility, innovation, scientific relevance, and applicability, and provide a final rating from 1 to 9 with detailed reasoning. The rating should be the average grade from 1 to 9 on a separate newline rounded to the nearest integer like this:
+7
+
+
+{contribution}
+"""
+
+
+def extract_auto_criticism_score(reply: str) -> int:
+  return int(reply[-1])
