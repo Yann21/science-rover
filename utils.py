@@ -12,6 +12,7 @@ client = OpenAI()
 class Paper:
   abstract: str
   title: str
+  category: str
 
 
 def pprint_chain(chain: List[Paper]):

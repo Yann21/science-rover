@@ -12,6 +12,7 @@ import os
 import json
 from utils import Paper, call_gpt_4o, pprint_chain, get_logger
 from datetime import datetime
+from retriever import categories
 
 load_dotenv()
 logger = get_logger()
@@ -52,10 +53,17 @@ def get_random_walk_successor(starting_node: Paper, all_nodes: List[Paper]) -> P
 
 def generate_contribution_chain(nodes: List[Paper], length: int) -> List[Paper]:
   """Generate chain of papers by following a pseudo-random walk."""
-  n0: List[Paper] = sample(nodes, k=1)
+  ml_nodes: List[Paper] = [node for node in nodes if node.category == "cs.LG"]
+  n0: List[Paper] = sample(ml_nodes, k=1)
   chain = n0
-  for _ in range(length - 1):
-    n = get_random_walk_successor(chain[-1], nodes)
+
+  # Heuristic of staying in the same domain
+  n1: Paper = get_random_walk_successor(chain[-1], nodes)
+  domain = n1.category
+  nodes = [node for node in nodes if node.category in [domain, "cs.LG"]]
+
+  for _ in range(length - 2):
+    n: Paper = get_random_walk_successor(chain[-1], nodes)
     chain.append(n)
   return chain
 
@@ -66,7 +74,6 @@ def generate_contribution(chain: List[Paper]) -> str:
   prompt = contribution_prompt("\n\n".join(abstracts))
   contribution = call_gpt_4o(prompt)
 
-  # log the contribution
   with open("logs/contribution.log", "a", encoding="utf-8") as f:
     # add also a timestamp
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -87,7 +94,7 @@ with open("arxiv_papers.json", "r", encoding="utf-8") as f:
 
 # %%
 chain = generate_contribution_chain(arxiv_papers, length=chain_length)
-# pprint_chain(chain)
+pprint_chain(chain)
 
 
 # %%
