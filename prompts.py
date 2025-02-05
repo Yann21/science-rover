@@ -20,6 +20,9 @@ Original paper: {abstracts[0]}
 """
 
 
+re_batch_relevance_extraction = re.compile(r"(\d+),?")
+
+
 def contribution_prompt(abstracts: str) -> str:
   return f"""Given the following abstracts that are known to be related, please provide 
 an interdisciplinary contribution to the field that could combine their ideas.
@@ -27,4 +30,14 @@ an interdisciplinary contribution to the field that could combine their ideas.
 {abstracts}"""
 
 
-re_batch_relevance_extraction = re.compile(r"(\d+),?")
+def auto_criticism_prompt(contribution: str) -> str:
+  return f"""Analyze this idea: Evaluate its feasibility, innovation, scientific relevance, and applicability, and provide a final rating from 1 to 9 with detailed reasoning. The rating should be the average grade from 1 to 9 on a separate newline rounded to the nearest integer like this:
+7
+
+
+{contribution}
+"""
+
+
+def extract_auto_criticism_score(reply: str) -> int:
+  return int(reply[-1])
