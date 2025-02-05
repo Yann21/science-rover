@@ -27,7 +27,7 @@ if __name__ == "__main__":
     for category in categories:
         search = arxiv.Search(
             query=f"cat:{category} AND submittedDate:[201801010600 TO {today}]",
-            max_results=200,
+            max_results=100,
             sort_by=arxiv.SortCriterion.Relevance
         )
 
@@ -36,7 +36,8 @@ if __name__ == "__main__":
         for i, result in enumerate(client.results(search)):
             paper_data = {
                 "title": result.title,
-                "abstract": result.summary
+                "abstract": result.summary,
+                "category": category
             }
             all_papers.append(paper_data)
 
